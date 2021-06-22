@@ -1,37 +1,55 @@
-## Welcome to GitHub Pages
+# Tiera
 
-You can use the [editor on GitHub](https://github.com/rasyidf/Tiera/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
+Petshop Management System
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-### Markdown
+## Roadmap
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+- Additional browser support
+- Complete Every Features
+- Add more integrations
 
-```markdown
-Syntax highlighted code block
+  
+## Features
 
-# Header 1
-## Header 2
-### Header 3
+- [x]  Light/dark mode toggle
+- [x]  Live previews
+- [x]  Fullscreen mode
+- [ ]  Cross platform
 
-- Bulleted
-- List
+  
+## FAQ
 
-1. Numbered
-2. List
+#### What Is this?
 
-**Bold** and _Italic_ and `Code` text
+Just some small app created for Final Semester Project
 
-[Link](url) and ![Image](src)
-```
+#### Will It be maintained?
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+Of course, I'll maintain this app.
 
-### Jekyll Themes
+  
+## Support
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/rasyidf/Tiera/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+For support, visit my [LinkedIn](https://linkedin.com/in/rasyidufa/)
 
-### Support or Contact
+  
+## License
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+[MIT](https://choosealicense.com/licenses/mit/)
+
+  
+## Contributing
+
+Contributions are always welcome!
+
+See `contributing.md` for ways to get started.
+
+Please adhere to this project's `code of conduct`.
+
+  
+## Authors
+
+- [@rasyidf](https://www.github.com/rasyidf)
+
+  
