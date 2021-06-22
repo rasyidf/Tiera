@@ -1,3 +1,6 @@
+
+![Logo](https://user-images.githubusercontent.com/28984914/123008585-557a9300-d3e5-11eb-8a8f-d145efc1446b.png)
+
 # Tiera
 
 Petshop Management System
