@@ -8,9 +8,9 @@ Petshop Management System
 
 ## Roadmap
 
-- Additional browser support
+- Full Dashboard support
 - Complete Every Features
-- Add more integrations
+- Inventory Management
 
   
 ## Features
@@ -18,7 +18,7 @@ Petshop Management System
 - [x]  Light/dark mode toggle
 - [x]  Live previews
 - [x]  Fullscreen mode
-- [ ]  Cross platform
+- [ ] ~Cross platform~ (Will be on windows 10+ only)
 
   
 ## FAQ
