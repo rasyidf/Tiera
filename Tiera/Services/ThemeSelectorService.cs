@@ -1,63 +1,64 @@
 ﻿using System;
-using System.Windows;
+using System.Threading.Tasks;
 
-using ControlzEx.Theming;
+using Tiera.Helpers;
 
-using MahApps.Metro.Theming;
-
-using Tiera.Contracts.Services;
-using Tiera.Models;
+using Windows.ApplicationModel.Core;
+using Windows.Storage;
+using Windows.UI.Core;
+using Windows.UI.Xaml;
 
 namespace Tiera.Services
 {
-    public class ThemeSelectorService : IThemeSelectorService
+    public static class ThemeSelectorService
     {
-        private const string HcDarkTheme = "pack://application:,,,/Styles/Themes/HC.Dark.Blue.xaml";
-        private const string HcLightTheme = "pack://application:,,,/Styles/Themes/HC.Light.Blue.xaml";
+        private const string SettingsKey = "AppBackgroundRequestedTheme";
 
-        public ThemeSelectorService()
+        public static ElementTheme Theme { get; set; } = ElementTheme.Default;
+
+        public static async Task InitializeAsync()
         {
+            Theme = await LoadThemeFromSettingsAsync();
         }
 
-        public void InitializeTheme()
+        public static async Task SetThemeAsync(ElementTheme theme)
         {
-            // TODO WTS: Mahapps.Metro supports syncronization with high contrast but you have to provide custom high contrast themes
-            // We've added basic high contrast dictionaries for Dark and Light themes
-            // Please complete these themes following the docs on https://mahapps.com/docs/themes/thememanager#creating-custom-themes
-            ThemeManager.Current.AddLibraryTheme(new LibraryTheme(new Uri(HcDarkTheme), MahAppsLibraryThemeProvider.DefaultInstance));
-            ThemeManager.Current.AddLibraryTheme(new LibraryTheme(new Uri(HcLightTheme), MahAppsLibraryThemeProvider.DefaultInstance));
+            Theme = theme;
 
-            var theme = GetCurrentTheme();
-            SetTheme(theme);
+            await SetRequestedThemeAsync();
+            await SaveThemeInSettingsAsync(Theme);
         }
 
-        public void SetTheme(AppTheme theme)
+        public static async Task SetRequestedThemeAsync()
         {
-            if (theme == AppTheme.Default)
+            foreach (var view in CoreApplication.Views)
             {
-                ThemeManager.Current.ThemeSyncMode = ThemeSyncMode.SyncAll;
-                ThemeManager.Current.SyncTheme();
+                await view.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    if (Window.Current.Content is FrameworkElement frameworkElement)
+                    {
+                        frameworkElement.RequestedTheme = Theme;
+                    }
+                });
             }
-            else
-            {
-                ThemeManager.Current.ThemeSyncMode = ThemeSyncMode.SyncWithHighContrast;
-                ThemeManager.Current.SyncTheme();
-                ThemeManager.Current.ChangeTheme(Application.Current, $"{theme}.Blue", SystemParameters.HighContrast);
-            }
-
-            App.Current.Properties["Theme"] = theme.ToString();
         }
 
-        public AppTheme GetCurrentTheme()
+        private static async Task<ElementTheme> LoadThemeFromSettingsAsync()
         {
-            if (App.Current.Properties.Contains("Theme"))
+            ElementTheme cacheTheme = ElementTheme.Default;
+            string themeName = await ApplicationData.Current.LocalSettings.ReadAsync<string>(SettingsKey);
+
+            if (!string.IsNullOrEmpty(themeName))
             {
-                var themeName = App.Current.Properties["Theme"].ToString();
-                Enum.TryParse(themeName, out AppTheme theme);
-                return theme;
+                Enum.TryParse(themeName, out cacheTheme);
             }
 
-            return AppTheme.Default;
+            return cacheTheme;
+        }
+
+        private static async Task SaveThemeInSettingsAsync(ElementTheme theme)
+        {
+            await ApplicationData.Current.LocalSettings.SaveAsync(SettingsKey, theme.ToString());
         }
     }
 }

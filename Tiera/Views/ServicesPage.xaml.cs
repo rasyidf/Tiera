@@ -1,15 +1,25 @@
-﻿using System.Windows.Controls;
+﻿using System;
 
 using Tiera.ViewModels;
 
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+
 namespace Tiera.Views
 {
-    public partial class ServicesPage : Page
+    public sealed partial class ServicesPage : Page
     {
-        public ServicesPage(ServicesViewModel viewModel)
+        public ServicesViewModel ViewModel { get; } = new ServicesViewModel();
+
+        public ServicesPage()
         {
             InitializeComponent();
-            DataContext = viewModel;
+            Loaded += ServicesPage_Loaded;
+        }
+
+        private async void ServicesPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            await ViewModel.LoadDataAsync(ListDetailsViewControl.ViewState);
         }
     }
 }

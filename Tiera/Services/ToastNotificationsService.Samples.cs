@@ -1,11 +1,10 @@
 ﻿using Microsoft.Toolkit.Uwp.Notifications;
 
-using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
 
 namespace Tiera.Services
 {
-    public partial class ToastNotificationsService
+    internal partial class ToastNotificationsService
     {
         public void ShowToastNotificationSample()
         {
@@ -50,9 +49,7 @@ namespace Tiera.Services
             };
 
             // Add the content to the toast
-            var doc = new XmlDocument();
-            doc.LoadXml(content.GetContent());
-            var toast = new ToastNotification(doc)
+            var toast = new ToastNotification(content.GetXml())
             {
                 // TODO WTS: Set a unique identifier for this notification within the notification group. (optional)
                 // More details at https://docs.microsoft.com/uwp/api/windows.ui.notifications.toastnotification.tag

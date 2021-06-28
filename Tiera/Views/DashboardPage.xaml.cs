@@ -1,15 +1,18 @@
-﻿using System.Windows.Controls;
+﻿using System;
 
 using Tiera.ViewModels;
 
+using Windows.UI.Xaml.Controls;
+
 namespace Tiera.Views
 {
-    public partial class DashboardPage : Page
+    public sealed partial class DashboardPage : Page
     {
-        public DashboardPage(DashboardViewModel viewModel)
+        public DashboardViewModel ViewModel { get; } = new DashboardViewModel();
+
+        public DashboardPage()
         {
             InitializeComponent();
-            DataContext = viewModel;
         }
     }
 }

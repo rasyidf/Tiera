@@ -1,20 +1,33 @@
-﻿using Microsoft.Toolkit.Uwp.Notifications;
+﻿using System;
+using System.Threading.Tasks;
 
-using Tiera.Contracts.Services;
+using Tiera.Activation;
 
+using Windows.ApplicationModel.Activation;
 using Windows.UI.Notifications;
 
 namespace Tiera.Services
 {
-    public partial class ToastNotificationsService : IToastNotificationsService
+    internal partial class ToastNotificationsService : ActivationHandler<ToastNotificationActivatedEventArgs>
     {
-        public ToastNotificationsService()
-        {
-        }
-
         public void ShowToastNotification(ToastNotification toastNotification)
         {
-            ToastNotificationManagerCompat.CreateToastNotifier().Show(toastNotification);
+            try
+            {
+                ToastNotificationManager.CreateToastNotifier().Show(toastNotification);
+            }
+            catch (Exception)
+            {
+                // TODO WTS: Adding ToastNotification can fail in rare conditions, please handle exceptions as appropriate to your scenario.
+            }
+        }
+
+        protected override async Task HandleInternalAsync(ToastNotificationActivatedEventArgs args)
+        {
+            //// TODO WTS: Handle activation from toast notification
+            //// More details at https://docs.microsoft.com/windows/uwp/design/shell/tiles-and-notifications/send-local-toast
+
+            await Task.CompletedTask;
         }
     }
 }

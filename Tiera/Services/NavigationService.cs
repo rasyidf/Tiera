@@ -1,101 +1,107 @@
 ﻿using System;
-using System.Windows.Controls;
-using System.Windows.Navigation;
 
-using Tiera.Contracts.Services;
-using Tiera.Contracts.ViewModels;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Navigation;
 
 namespace Tiera.Services
 {
-    public class NavigationService : INavigationService
+    public static class NavigationService
     {
-        private readonly IPageService _pageService;
-        private Frame _frame;
-        private object _lastParameterUsed;
+        public static event NavigatedEventHandler Navigated;
 
-        public event EventHandler<string> Navigated;
+        public static event NavigationFailedEventHandler NavigationFailed;
 
-        public bool CanGoBack => _frame.CanGoBack;
+        private static Frame _frame;
+        private static object _lastParamUsed;
 
-        public NavigationService(IPageService pageService)
+        public static Frame Frame
         {
-            _pageService = pageService;
-        }
-
-        public void Initialize(Frame shellFrame)
-        {
-            if (_frame == null)
+            get
             {
-                _frame = shellFrame;
-                _frame.Navigated += OnNavigated;
+                if (_frame == null)
+                {
+                    _frame = Window.Current.Content as Frame;
+                    RegisterFrameEvents();
+                }
+
+                return _frame;
+            }
+
+            set
+            {
+                UnregisterFrameEvents();
+                _frame = value;
+                RegisterFrameEvents();
             }
         }
 
-        public void UnsubscribeNavigation()
-        {
-            _frame.Navigated -= OnNavigated;
-            _frame = null;
-        }
+        public static bool CanGoBack => Frame.CanGoBack;
 
-        public void GoBack()
+        public static bool CanGoForward => Frame.CanGoForward;
+
+        public static bool GoBack()
         {
-            if (_frame.CanGoBack)
+            if (CanGoBack)
             {
-                var vmBeforeNavigation = _frame.GetDataContext();
-                _frame.GoBack();
-                if (vmBeforeNavigation is INavigationAware navigationAware)
-                {
-                    navigationAware.OnNavigatedFrom();
-                }
-            }
-        }
-
-        public bool NavigateTo(string pageKey, object parameter = null, bool clearNavigation = false)
-        {
-            var pageType = _pageService.GetPageType(pageKey);
-
-            if (_frame.Content?.GetType() != pageType || (parameter != null && !parameter.Equals(_lastParameterUsed)))
-            {
-                _frame.Tag = clearNavigation;
-                var page = _pageService.GetPage(pageKey);
-                var navigated = _frame.Navigate(page, parameter);
-                if (navigated)
-                {
-                    _lastParameterUsed = parameter;
-                    var dataContext = _frame.GetDataContext();
-                    if (dataContext is INavigationAware navigationAware)
-                    {
-                        navigationAware.OnNavigatedFrom();
-                    }
-                }
-
-                return navigated;
+                Frame.GoBack();
+                return true;
             }
 
             return false;
         }
 
-        public void CleanNavigation()
-            => _frame.CleanNavigation();
+        public static void GoForward() => Frame.GoForward();
 
-        private void OnNavigated(object sender, NavigationEventArgs e)
+        public static bool Navigate(Type pageType, object parameter = null, NavigationTransitionInfo infoOverride = null)
         {
-            if (sender is Frame frame)
+            if (pageType == null || !pageType.IsSubclassOf(typeof(Page)))
             {
-                bool clearNavigation = (bool)frame.Tag;
-                if (clearNavigation)
+                throw new ArgumentException($"Invalid pageType '{pageType}', please provide a valid pageType.", nameof(pageType));
+            }
+
+            // Don't open the same page multiple times
+            if (Frame.Content?.GetType() != pageType || (parameter != null && !parameter.Equals(_lastParamUsed)))
+            {
+                var navigationResult = Frame.Navigate(pageType, parameter, infoOverride);
+                if (navigationResult)
                 {
-                    frame.CleanNavigation();
+                    _lastParamUsed = parameter;
                 }
 
-                var dataContext = frame.GetDataContext();
-                if (dataContext is INavigationAware navigationAware)
-                {
-                    navigationAware.OnNavigatedTo(e.ExtraData);
-                }
-
-                Navigated?.Invoke(sender, dataContext.GetType().FullName);
+                return navigationResult;
+            }
+            else
+            {
+                return false;
             }
         }
+
+        public static bool Navigate<T>(object parameter = null, NavigationTransitionInfo infoOverride = null)
+            where T : Page
+            => Navigate(typeof(T), parameter, infoOverride);
+
+        private static void RegisterFrameEvents()
+        {
+            if (_frame != null)
+            {
+                _frame.Navigated += Frame_Navigated;
+                _frame.NavigationFailed += Frame_NavigationFailed;
+            }
+        }
+
+        private static void UnregisterFrameEvents()
+        {
+            if (_frame != null)
+            {
+                _frame.Navigated -= Frame_Navigated;
+                _frame.NavigationFailed -= Frame_NavigationFailed;
+            }
+        }
+
+        private static void Frame_NavigationFailed(object sender, NavigationFailedEventArgs e) => NavigationFailed?.Invoke(sender, e);
+
+        private static void Frame_Navigated(object sender, NavigationEventArgs e) => Navigated?.Invoke(sender, e);
     }
 }

@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Microsoft.Toolkit.Mvvm.Input;
+using Microsoft.Toolkit.Uwp.UI.Controls;
 
-using Tiera.Contracts.ViewModels;
-using Tiera.Core.Contracts.Services;
 using Tiera.Core.Models;
+using Tiera.Core.Services;
 
 namespace Tiera.ViewModels
 {
-    public class ServicesViewModel : ObservableObject, INavigationAware
+    public class ServicesViewModel : ObservableObject
     {
-        private readonly ISampleDataService _sampleDataService;
         private SampleOrder _selected;
 
         public SampleOrder Selected
@@ -24,27 +23,25 @@ namespace Tiera.ViewModels
 
         public ObservableCollection<SampleOrder> SampleItems { get; private set; } = new ObservableCollection<SampleOrder>();
 
-        public ServicesViewModel(ISampleDataService sampleDataService)
+        public ServicesViewModel()
         {
-            _sampleDataService = sampleDataService;
         }
 
-        public async void OnNavigatedTo(object parameter)
+        public async Task LoadDataAsync(ListDetailsViewState viewState)
         {
             SampleItems.Clear();
 
-            var data = await _sampleDataService.GetListDetailsDataAsync();
+            var data = await SampleDataService.GetListDetailDataAsync();
 
             foreach (var item in data)
             {
                 SampleItems.Add(item);
             }
 
-            Selected = SampleItems.First();
-        }
-
-        public void OnNavigatedFrom()
-        {
+            if (viewState == ListDetailsViewState.Both)
+            {
+                Selected = SampleItems.First();
+            }
         }
     }
 }

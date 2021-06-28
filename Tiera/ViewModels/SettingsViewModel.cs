@@ -1,154 +1,77 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
-using Microsoft.Extensions.Options;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 
-using Tiera.Contracts.Services;
-using Tiera.Contracts.ViewModels;
-using Tiera.Core.Contracts.Services;
-using Tiera.Core.Helpers;
 using Tiera.Helpers;
-using Tiera.Models;
+using Tiera.Services;
+
+using Windows.ApplicationModel;
+using Windows.UI.Xaml;
 
 namespace Tiera.ViewModels
 {
-    public class SettingsViewModel : ObservableObject, INavigationAware
+    // TODO WTS: Add other settings as necessary. For help see https://github.com/Microsoft/WindowsTemplateStudio/blob/release/docs/UWP/pages/settings.md
+    public class SettingsViewModel : ObservableObject
     {
-        private readonly AppConfig _appConfig;
-        private readonly IUserDataService _userDataService;
-        private readonly IIdentityService _identityService;
-        private readonly IThemeSelectorService _themeSelectorService;
-        private readonly ISystemService _systemService;
-        private readonly IApplicationInfoService _applicationInfoService;
-        private AppTheme _theme;
-        private string _versionDescription;
-        private bool _isBusy;
-        private bool _isLoggedIn;
-        private UserViewModel _user;
-        private ICommand _setThemeCommand;
-        private ICommand _privacyStatementCommand;
-        private RelayCommand _logInCommand;
-        private RelayCommand _logOutCommand;
+        private ElementTheme _elementTheme = ThemeSelectorService.Theme;
 
-        public AppTheme Theme
+        public ElementTheme ElementTheme
         {
-            get { return _theme; }
-            set { SetProperty(ref _theme, value); }
+            get { return _elementTheme; }
+
+            set { SetProperty(ref _elementTheme, value); }
         }
+
+        private string _versionDescription;
 
         public string VersionDescription
         {
             get { return _versionDescription; }
+
             set { SetProperty(ref _versionDescription, value); }
         }
 
-        public bool IsBusy
+        private ICommand _switchThemeCommand;
+
+        public ICommand SwitchThemeCommand
         {
-            get => _isBusy;
-            set
+            get
             {
-                SetProperty(ref _isBusy, value);
-                LogInCommand.NotifyCanExecuteChanged();
-                LogOutCommand.NotifyCanExecuteChanged();
+                if (_switchThemeCommand == null)
+                {
+                    _switchThemeCommand = new RelayCommand<ElementTheme>(
+                        async (param) =>
+                        {
+                            ElementTheme = param;
+                            await ThemeSelectorService.SetThemeAsync(param);
+                        });
+                }
+
+                return _switchThemeCommand;
             }
         }
 
-        public bool IsLoggedIn
+        public SettingsViewModel()
         {
-            get { return _isLoggedIn; }
-            set { SetProperty(ref _isLoggedIn, value); }
         }
 
-        public UserViewModel User
+        public async Task InitializeAsync()
         {
-            get { return _user; }
-            set { SetProperty(ref _user, value); }
+            VersionDescription = GetVersionDescription();
+            await Task.CompletedTask;
         }
 
-        public ICommand SetThemeCommand => _setThemeCommand ??= new RelayCommand<string>(OnSetTheme);
-
-        public ICommand PrivacyStatementCommand => _privacyStatementCommand ??= new RelayCommand(OnPrivacyStatement);
-
-        public RelayCommand LogInCommand => _logInCommand ??= new RelayCommand(OnLogIn, () => !IsBusy);
-
-        public RelayCommand LogOutCommand => _logOutCommand ??= new RelayCommand(OnLogOut, () => !IsBusy);
-
-        public SettingsViewModel(IOptions<AppConfig> appConfig, IThemeSelectorService themeSelectorService, ISystemService systemService, IApplicationInfoService applicationInfoService, IUserDataService userDataService, IIdentityService identityService)
+        private string GetVersionDescription()
         {
-            _appConfig = appConfig.Value;
-            _themeSelectorService = themeSelectorService;
-            _systemService = systemService;
-            _applicationInfoService = applicationInfoService;
-            _userDataService = userDataService;
-            _identityService = identityService;
-        }
+            var appName = "AppDisplayName".GetLocalized();
+            var package = Package.Current;
+            var packageId = package.Id;
+            var version = packageId.Version;
 
-        public void OnNavigatedTo(object parameter)
-        {
-            VersionDescription = $"{Properties.Resources.AppDisplayName} - {_applicationInfoService.GetVersion()}";
-            Theme = _themeSelectorService.GetCurrentTheme();
-            _identityService.LoggedIn += OnLoggedIn;
-            _identityService.LoggedOut += OnLoggedOut;
-            IsLoggedIn = _identityService.IsLoggedIn();
-            _userDataService.UserDataUpdated += OnUserDataUpdated;
-            User = _userDataService.GetUser();
-        }
-
-        public void OnNavigatedFrom()
-        {
-            UnregisterEvents();
-        }
-
-        private void UnregisterEvents()
-        {
-            _identityService.LoggedIn -= OnLoggedIn;
-            _identityService.LoggedOut -= OnLoggedOut;
-            _userDataService.UserDataUpdated -= OnUserDataUpdated;
-        }
-
-        private void OnSetTheme(string themeName)
-        {
-            var theme = (AppTheme)Enum.Parse(typeof(AppTheme), themeName);
-            _themeSelectorService.SetTheme(theme);
-        }
-
-        private void OnPrivacyStatement()
-            => _systemService.OpenInWebBrowser(_appConfig.PrivacyStatement);
-
-        private async void OnLogIn()
-        {
-            IsBusy = true;
-            var loginResult = await _identityService.LoginAsync();
-            if (loginResult != LoginResultType.Success)
-            {
-                await AuthenticationHelper.ShowLoginErrorAsync(loginResult);
-                IsBusy = false;
-            }
-        }
-
-        private async void OnLogOut()
-        {
-            await _identityService.LogoutAsync();
-        }
-
-        private void OnUserDataUpdated(object sender, UserViewModel userData)
-        {
-            User = userData;
-        }
-
-        private void OnLoggedIn(object sender, EventArgs e)
-        {
-            IsLoggedIn = true;
-            IsBusy = false;
-        }
-
-        private void OnLoggedOut(object sender, EventArgs e)
-        {
-            User = null;
-            IsLoggedIn = false;
-            IsBusy = false;
+            return $"{appName} - {version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
         }
     }
 }
