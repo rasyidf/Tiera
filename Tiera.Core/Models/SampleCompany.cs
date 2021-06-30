@@ -5,7 +5,7 @@ namespace Tiera.Core.Models
 {
     // Remove this class once your pages/features are using your data.
     // This is used by the SampleDataService.
-    // It is the model class we use to display data on pages like Grid, Chart, and List Details.
+    // It is the model class we use to display data on pages like Grid, Chart, and List Detail.
     public class SampleCompany
     {
         public string CompanyID { get; set; }
